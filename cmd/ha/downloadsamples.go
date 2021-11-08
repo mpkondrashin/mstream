@@ -8,17 +8,19 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/mpkondrashin/mstream/pkg/hybridanalysis"
 )
 
 type DownloadSamples struct {
-	ha *HybridAnalysis
+	ha *hybridanalysis.HybridAnalysis
 	//	tagetFolder          string
 	skipList             []string
 	includeList          []string
 	threatLevelThreshold int
 }
 
-func NewDownloadSamples(ha *HybridAnalysis) *DownloadSamples {
+func NewDownloadSamples(ha *hybridanalysis.HybridAnalysis) *DownloadSamples {
 	return &DownloadSamples{
 		ha: ha,
 		//	tagetFolder:          tagetFolder,
@@ -43,7 +45,7 @@ func (ds *DownloadSamples) SetThreatLevelThreshold(threatLevelThreshold int) *Do
 
 func (ds *DownloadSamples) Download(targetFolder string) error {
 	return ds.ha.IterateFiles(
-		func(data *ListLatestData, path string) error {
+		func(data *hybridanalysis.ListLatestData, path string) error {
 			folderName := data.Sha1
 			folderPath := filepath.Join(targetFolder, folderName)
 			err := os.Mkdir(folderPath, 0700)
@@ -58,7 +60,7 @@ func (ds *DownloadSamples) Download(targetFolder string) error {
 			if err != nil {
 				return err
 			}
-			log.Printf("Sample: %s", fileName)
+			log.Printf("New sample: %s", fileName)
 			repFile, err := os.Create(repPath)
 			if err != nil {
 				return err
@@ -71,7 +73,7 @@ func (ds *DownloadSamples) Download(targetFolder string) error {
 			}
 			return nil
 		},
-		func(data *ListLatestData) bool {
+		func(data *hybridanalysis.ListLatestData) bool {
 			//repName := fmt.Sprintf("%s.txt", data.JobID)
 			repPath := filepath.Join(targetFolder, data.Sha1)
 			_, err := os.Stat(repPath)

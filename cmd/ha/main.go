@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -19,62 +18,45 @@ curl -X 'GET' \
   --output a.bin
 */
 
-var (
-	HybridAnalysisAPIKey string = ""
-	ThreatLevelThreshold int    = 0
-	SkipList             string = ""
-	IncludeList          string = ""
-	TargetDir            string = ""
-)
-
-//	maxFileSize          = 100000000
-
-func ParseArgs() {
-	flag.StringVar(&HybridAnalysisAPIKey, "hakey", "", "Hybrid Analysis API key")
-	flag.StringVar(&TargetDir, "output", "", "Target folder")
-	flag.IntVar(&ThreatLevelThreshold, "level", 2, "Threat level threshold")
-	flag.StringVar(&SkipList, "skip", "", "Coma separated list of platform keywords to skip")
-	flag.StringVar(&SkipList, "include", "", "Coma separated list of platform keywords to include")
-	flag.Parse()
-	if TargetDir == "" {
-		fmt.Println("No output folder provided")
+func main() {
+	conf := NewConfig()
+	err := conf.ParseAll("mstream.yaml")
+	if err != nil {
+		fmt.Print(err)
 		os.Exit(1)
 	}
-	if HybridAnalysisAPIKey == "" {
-		fmt.Println("No Hybrid Analysis API key provided")
-		os.Exit(2)
+	if conf.Log != "" {
+		logF, err := os.OpenFile(conf.Log, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0700)
+		if err != nil {
+			log.Fatalf("Log file error: %v\n", err)
+			os.Exit(5)
+		}
+		defer logF.Close()
+		log.SetOutput(logF)
 	}
-	if ThreatLevelThreshold < 0 || ThreatLevelThreshold > 2 {
-		fmt.Println("Wrong threat level threshold value")
-		os.Exit(3)
-	}
-}
-
-func main() {
-	ParseArgs()
-	err := os.MkdirAll(TargetDir, 0700)
+	err = os.MkdirAll(conf.TargetDir, 0700)
 	if err != nil && !errors.Is(err, os.ErrExist) {
 		log.Print(err)
 		fmt.Println(err)
 		os.Exit(4)
 	}
-	ha := NewHybridAnalysis(HybridAnalysisAPIKey)
-	ds := NewDownloadSamples(ha).SetThreatLevelThreshold(ThreatLevelThreshold)
-	if len(SkipList) > 0 {
-		for _, each := range strings.Split(SkipList, ",") {
+	ha := NewHybridAnalysis(conf.HybridAnalysisAPIKey)
+	ds := NewDownloadSamples(ha).SetThreatLevelThreshold(conf.ThreatLevelThreshold)
+	if len(conf.SkipList) > 0 {
+		for _, each := range strings.Split(conf.SkipList, ",") {
 			ds.SetSkip(each)
 		}
 	}
-	if len(IncludeList) > 0 {
-		for _, each := range strings.Split(IncludeList, ",") {
+	if len(conf.IncludeList) > 0 {
+		for _, each := range strings.Split(conf.IncludeList, ",") {
 			//	fmt.Printf("\"%s\" INCLUDE: %s\n", IncludeList, each)
 			ds.SetInclude(each)
 		}
 	}
-	err = ds.Download(TargetDir)
+	err = ds.Download(conf.TargetDir)
 	if err != nil {
 		log.Print(err)
-		fmt.Println(err)
+		//fmt.Println(err)
 		os.Exit(5)
 	}
 }
