@@ -1,0 +1,5 @@
+VirusTotalAPIKey: <VT API KEY>
+TargetDir: malware
+Interval: 15s
+PauseBetweenSubmissions: 45s
+Log: vtanalysis.log

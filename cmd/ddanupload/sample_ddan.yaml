@@ -1,0 +1,10 @@
+TargetDir: malware
+Log: ddan.log
+Hostname: https://1.1.1.5
+APIKey: 234 
+SourceID: 304
+SourceName: MStream
+ClientUUID: 123412341234-1234-1234-1234-12341234
+ProductName: "MalwareTest"
+IgnoreTLSError: True
+Interval: 10m

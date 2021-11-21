@@ -1,0 +1,5 @@
+HybridAnalysisAPIKey: <HA KEY>
+ThreatLevelThreshold: 2
+SkipList: Android,Linux
+TargetDir: malware
+Interval: 20m
