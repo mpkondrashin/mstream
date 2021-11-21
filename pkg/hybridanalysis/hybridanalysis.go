@@ -1,4 +1,4 @@
-package main
+package hybridanalysis
 
 import (
 	"compress/gzip"
@@ -24,24 +24,24 @@ var (
 	ErrResponseError = errors.New("response error")
 )
 
-type HybridAnalysis struct {
+type Client struct {
 	APIKey    string
 	userAgent string
 }
 
-func NewHybridAnalysis(APIKey string) *HybridAnalysis {
-	return &HybridAnalysis{
+func New(APIKey string) *Client {
+	return &Client{
 		APIKey:    APIKey,
 		userAgent: "Falcon Sandbox",
 	}
 }
 
-func (ha *HybridAnalysis) SetUserAgent(userAgent string) *HybridAnalysis {
-	ha.userAgent = userAgent
-	return ha
+func (c *Client) SetUserAgent(userAgent string) *Client {
+	c.userAgent = userAgent
+	return c
 }
 
-func (ha *HybridAnalysis) ListLatest() (*ListLatest, error) {
+func (c *Client) ListLatest() (*ListLatest, error) {
 	client := &http.Client{}
 	url := "https://www.hybrid-analysis.com/api/v2/feed/latest"
 	//fmt.Printf("URL: %s\n", url)
@@ -49,9 +49,9 @@ func (ha *HybridAnalysis) ListLatest() (*ListLatest, error) {
 	if err != nil {
 		return nil, fmt.Errorf("http.NewRequest: %w", err)
 	}
-	req.Header.Add("Api-Key", ha.APIKey)
+	req.Header.Add("Api-Key", c.APIKey)
 	req.Header.Add("Accept", "application/json")
-	req.Header.Add("User-Agent", ha.userAgent)
+	req.Header.Add("User-Agent", c.userAgent)
 	//req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
@@ -77,16 +77,16 @@ func (ha *HybridAnalysis) ListLatest() (*ListLatest, error) {
 	return &data, nil
 }
 
-func (ha *HybridAnalysis) Report(jobID, reportType string) ([]byte, error) {
+func (c *Client) Report(jobID, reportType string) ([]byte, error) {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://www.hybrid-analysis.com/api/v2/report/%s/report/%s", jobID, reportType)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Api-Key", ha.APIKey)
+	req.Header.Add("Api-Key", c.APIKey)
 	//req.Header.Add("Accept", "application/json")
-	req.Header.Add("User-Agent", ha.userAgent)
+	req.Header.Add("User-Agent", c.userAgent)
 	//req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
@@ -101,16 +101,16 @@ func (ha *HybridAnalysis) Report(jobID, reportType string) ([]byte, error) {
 	//fmt.Printf("%v\n", string(jsonData))
 }
 
-func (ha *HybridAnalysis) DownloadGzipSample(id string) (io.ReadCloser, error) {
+func (c *Client) DownloadGzipSample(id string) (io.ReadCloser, error) {
 	client := &http.Client{}
 	url := fmt.Sprintf("https://www.hybrid-analysis.com/api/v2/report/%s/sample", id)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", url, err)
 	}
-	req.Header.Add("Api-Key", ha.APIKey)
+	req.Header.Add("Api-Key", c.APIKey)
 	req.Header.Add("Accept", "application/gzip")
-	req.Header.Add("User-Agent", ha.userAgent)
+	req.Header.Add("User-Agent", c.userAgent)
 	//req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
@@ -120,8 +120,8 @@ func (ha *HybridAnalysis) DownloadGzipSample(id string) (io.ReadCloser, error) {
 	return resp.Body, nil
 }
 
-func (ha *HybridAnalysis) DownloadSample(id string) (io.Reader, io.Closer, error) {
-	g, err := ha.DownloadGzipSample(id)
+func (c *Client) DownloadSample(id string) (io.Reader, io.Closer, error) {
+	g, err := c.DownloadGzipSample(id)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -132,9 +132,9 @@ func (ha *HybridAnalysis) DownloadSample(id string) (io.Reader, io.Closer, error
 	return r, g, nil
 }
 
-func (ha *HybridAnalysis) __IterateReader(callback func(data *ListLatestData, r io.Reader) error,
+func (c *Client) __IterateReader(callback func(data *ListLatestData, r io.Reader) error,
 	filter func(data *ListLatestData) bool) error {
-	d, err := ha.ListLatest()
+	d, err := c.ListLatest()
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (ha *HybridAnalysis) __IterateReader(callback func(data *ListLatestData, r 
 			continue
 		}
 		//fmt.Printf("%s\n", each.JobID)
-		u, toClose, err := ha.DownloadSample(each.JobID)
+		u, toClose, err := c.DownloadSample(each.JobID)
 		if err != nil {
 			if errors.Is(err, gzip.ErrHeader) {
 				log.Printf("Missing sample for %s", each.JobID)
@@ -162,9 +162,9 @@ func (ha *HybridAnalysis) __IterateReader(callback func(data *ListLatestData, r 
 	return nil
 }
 
-func (ha *HybridAnalysis) IterateReader(callback func(data *ListLatestData, r io.Reader) error,
+func (c *Client) IterateReader(callback func(data *ListLatestData, r io.Reader) error,
 	filter func(data *ListLatestData) bool) error {
-	d, err := ha.ListLatest()
+	d, err := c.ListLatest()
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (ha *HybridAnalysis) IterateReader(callback func(data *ListLatestData, r io
 			continue
 		}
 		eGroup.Go(func() error {
-			u, toClose, err := ha.DownloadSample(each.JobID)
+			u, toClose, err := c.DownloadSample(each.JobID)
 			if err != nil {
 				if errors.Is(err, gzip.ErrHeader) {
 					log.Printf("Missing sample for %s", each.JobID)
@@ -191,7 +191,7 @@ func (ha *HybridAnalysis) IterateReader(callback func(data *ListLatestData, r io
 	return eGroup.Wait()
 }
 
-func (ha *HybridAnalysis) IterateFiles(
+func (c *Client) IterateFiles(
 	callback func(data *ListLatestData, path string) error,
 	filter func(data *ListLatestData) bool) error {
 	dir, err := ioutil.TempDir("", "ha")
@@ -200,7 +200,7 @@ func (ha *HybridAnalysis) IterateFiles(
 	}
 	//fmt.Printf("Temp folder: %s\n", dir)
 	defer os.Remove(dir)
-	return ha.IterateReader(func(data *ListLatestData, r io.Reader) error {
+	return c.IterateReader(func(data *ListLatestData, r io.Reader) error {
 		content, err := ioutil.ReadAll(r)
 		if err != nil {
 			return fmt.Errorf("IterateReader: %w", err)

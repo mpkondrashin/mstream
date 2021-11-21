@@ -1,4 +1,4 @@
-package main
+package hybridanalysis
 
 import (
 	"encoding/json"
@@ -8,19 +8,19 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/mpkondrashin/mstream/pkg/hybridanalysis"
+	//	"github.com/mpkondrashin/mstream/pkg/hybridanalysis"
 )
 
 type DownloadSamples struct {
-	ha *hybridanalysis.HybridAnalysis
+	ha *Client
 	//	tagetFolder          string
 	skipList             []string
 	includeList          []string
+	extensions           []string
 	threatLevelThreshold int
 }
 
-func NewDownloadSamples(ha *hybridanalysis.HybridAnalysis) *DownloadSamples {
+func NewDownloadSamples(ha *Client) *DownloadSamples {
 	return &DownloadSamples{
 		ha: ha,
 		//	tagetFolder:          tagetFolder,
@@ -38,14 +38,39 @@ func (ds *DownloadSamples) SetInclude(keyword string) *DownloadSamples {
 	return ds
 }
 
+func (ds *DownloadSamples) SetExtension(keyword string) *DownloadSamples {
+	ds.extensions = append(ds.extensions, keyword)
+	return ds
+}
+
 func (ds *DownloadSamples) SetThreatLevelThreshold(threatLevelThreshold int) *DownloadSamples {
 	ds.threatLevelThreshold = threatLevelThreshold
 	return ds
 }
 
+func (ds *DownloadSamples) MatchExtension(fileName string) bool {
+	e := strings.ToLower(filepath.Ext(fileName))
+	if len(e) < 2 {
+		return false
+	}
+	if e[0] == '.' {
+		e = e[1:]
+	}
+	for _, ext := range ds.extensions {
+		if e == ext {
+			return true
+		}
+	}
+	return false
+}
+
 func (ds *DownloadSamples) Download(targetFolder string) error {
 	return ds.ha.IterateFiles(
-		func(data *hybridanalysis.ListLatestData, path string) error {
+		func(data *ListLatestData, path string) error {
+			if !ds.MatchExtension(path) {
+				log.Printf("Skip unwanted type: %s", filepath.Base(path))
+				return nil
+			}
 			folderName := data.Sha1
 			folderPath := filepath.Join(targetFolder, folderName)
 			err := os.Mkdir(folderPath, 0700)
@@ -73,7 +98,7 @@ func (ds *DownloadSamples) Download(targetFolder string) error {
 			}
 			return nil
 		},
-		func(data *hybridanalysis.ListLatestData) bool {
+		func(data *ListLatestData) bool {
 			//repName := fmt.Sprintf("%s.txt", data.JobID)
 			repPath := filepath.Join(targetFolder, data.Sha1)
 			_, err := os.Stat(repPath)
