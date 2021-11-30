@@ -10,6 +10,7 @@ require (
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mpkondrashin/ddan v0.0.0-20211120211046-db28a0aeb1f3 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
+	github.com/soellman/pidfile v0.0.0-20160225184504-d482c905736b // indirect
 	github.com/thedevsaddam/gojsonq/v2 v2.5.2 // indirect
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect

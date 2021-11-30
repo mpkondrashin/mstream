@@ -32,10 +32,11 @@ type Config struct {
 	//	DataBase             string `yaml:"DataBase"`
 }
 
+/*
 func NewConfig() *Config {
 	return &Config{}
 }
-
+*/
 func (c *Config) LoadConfig() error {
 	return c.LoadConfigFile(ConfigFileName())
 }

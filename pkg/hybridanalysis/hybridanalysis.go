@@ -41,7 +41,7 @@ func (c *Client) SetUserAgent(userAgent string) *Client {
 	return c
 }
 
-func (c *Client) ListLatest() (*ListLatest, error) {
+func (c *Client) ListLatestSamples() (*ListLatest, error) {
 	client := &http.Client{}
 	url := "https://www.hybrid-analysis.com/api/v2/feed/latest"
 	//fmt.Printf("URL: %s\n", url)
@@ -60,7 +60,7 @@ func (c *Client) ListLatest() (*ListLatest, error) {
 	defer resp.Body.Close()
 	//fmt.Printf("Respond: %v", resp)
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%w: %d", ErrResponseError, resp.StatusCode)
+		return nil, fmt.Errorf("%s: %w: %d", url, ErrResponseError, resp.StatusCode)
 	}
 	jsonData, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -132,6 +132,7 @@ func (c *Client) DownloadSample(id string) (io.Reader, io.Closer, error) {
 	return r, g, nil
 }
 
+/*
 func (c *Client) __IterateReader(callback func(data *ListLatestData, r io.Reader) error,
 	filter func(data *ListLatestData) bool) error {
 	d, err := c.ListLatest()
@@ -161,10 +162,11 @@ func (c *Client) __IterateReader(callback func(data *ListLatestData, r io.Reader
 	}
 	return nil
 }
+*/
 
 func (c *Client) IterateReader(callback func(data *ListLatestData, r io.Reader) error,
 	filter func(data *ListLatestData) bool) error {
-	d, err := c.ListLatest()
+	d, err := c.ListLatestSamples()
 	if err != nil {
 		return err
 	}

@@ -18,6 +18,8 @@ github.com/mpkondrashin/ddan v0.0.0-20211120211046-db28a0aeb1f3/go.mod h1:RPbHf/
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 h1:OdAsTTz6OkFY5QxjkYwrChwuRruF69c169dPK26NUlk=
 github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
+github.com/soellman/pidfile v0.0.0-20160225184504-d482c905736b h1:iIk2ziBApy8Qf6KuoKoVqFOYCmQICxsrRNyry/IQH1k=
+github.com/soellman/pidfile v0.0.0-20160225184504-d482c905736b/go.mod h1:Cl3hBycyq3EjWqsRkNkbhDKYiB7SEfwRIXLKDcULwb4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/thedevsaddam/gojsonq/v2 v2.5.2 h1:CoMVaYyKFsVj6TjU6APqAhAvC07hTI6IQen8PHzHYY0=
