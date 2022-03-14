@@ -1,75 +1,42 @@
 package hybridanalysis
 
 import (
-	"errors"
-	"os"
-	"time"
+	"github.com/mpkondrashin/mstream/pkg/sleeper"
 )
 
-var ErrShouldStop = errors.New("Stop signal received")
-
-type Sleeper struct {
-	lastTime          time.Time
-	sleepInterval     time.Duration
-	stopSignalChannel chan os.Signal
-}
-
-func NewPauser(sleepInterval time.Duration,
-	stopSignalChannel chan os.Signal) *Sleeper {
-	return &Sleeper{
-		sleepInterval:     sleepInterval,
-		stopSignalChannel: stopSignalChannel,
-	}
-}
-
-func (s *Sleeper) TakeANap() error {
-	nextQueryTime := s.lastTime.Add(s.sleepInterval)
-	sleepTime := time.Until(nextQueryTime)
-	select {
-	case <-time.After(sleepTime):
-	case <-s.stopSignalChannel:
-		return ErrShouldStop
-	}
-	return nil
-}
-
-/*
-	nextQueryTime := s.latestQueryTime.Add(s.pauseBetweenQueries)
-	sleepTime := time.Until(nextQueryTime)
-	time.Sleep(sleepTime)
-*/
-
 type SamplesStream struct {
-	client              *Client
-	latestQueryTime     time.Time
-	pauseBetweenQueries time.Duration
-	pauseFunc           PauseFunction
-	data                *ListLatest
-	sampleCount         int
+	client      *Client
+	sleeper     *sleeper.Sleeper
+	data        *ListLatest
+	sampleCount int
 }
 
-func NewSamplesStream(client *Client, pauseBetweenQueries time.Duration, pauseFunc PauseFunction) *SamplesStream {
+func NewSamplesStream(client *Client, sleeper *sleeper.Sleeper) *SamplesStream {
 	return &SamplesStream{
-		client:              client,
-		pauseBetweenQueries: pauseBetweenQueries,
-		pauseFunc:           pauseFunc,
+		client:  client,
+		sleeper: sleeper,
 	}
 }
 
 func (s *SamplesStream) GetSample() (*ListLatestData, error) {
-	if s.data == nil {
-		s.UpdateSamples()
+	if s.data == nil || s.sampleCount >= len(s.data.Data) {
+		err := s.UpdateSamples()
+		if err != nil {
+			//log.Printf("EEE GetSample() %v", err)
+			return nil, err
+		}
 	}
-	if s.sampleCount >= len(s.data.Data) {
-
-	}
+	d := &s.data.Data[s.sampleCount]
+	s.sampleCount++
+	return d, nil
 }
 
 func (s *SamplesStream) UpdateSamples() error {
-	nextQueryTime := s.latestQueryTime.Add(s.pauseBetweenQueries)
-	sleepTime := time.Until(nextQueryTime)
-	time.Sleep(sleepTime)
-	var err error
+	err := s.sleeper.SleepIfNeeded()
+	if err != nil {
+		//log.Printf("EEE UpdateSamples(): %v", err)
+		return err
+	}
 	s.data, err = s.client.ListLatestSamples()
 	if err != nil {
 		return err

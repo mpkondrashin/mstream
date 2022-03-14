@@ -4,10 +4,12 @@ go 1.17
 
 require (
 	github.com/VirusTotal/vt-go v0.0.0-20210825093459-630821968ade // indirect
+	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/h2non/filetype v1.1.1 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/mattn/go-sqlite3 v1.14.9 // indirect
 	github.com/mpkondrashin/ddan v0.0.0-20211120211046-db28a0aeb1f3 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/soellman/pidfile v0.0.0-20160225184504-d482c905736b // indirect

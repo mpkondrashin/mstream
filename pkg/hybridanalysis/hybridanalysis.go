@@ -43,7 +43,7 @@ func (c *Client) SetUserAgent(userAgent string) *Client {
 
 func (c *Client) ListLatestSamples() (*ListLatest, error) {
 	client := &http.Client{}
-	url := "https://www.hybrid-analysis.com/api/v2/feed/latest"
+	url := "https://www.AAAhybrid-analysis.com/api/v2/feed/latest"
 	//fmt.Printf("URL: %s\n", url)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -55,7 +55,7 @@ func (c *Client) ListLatestSamples() (*ListLatest, error) {
 	//req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("client.Do: %w", err)
+		return nil, fmt.Errorf("http.Client.Do: %w", err)
 	}
 	defer resp.Body.Close()
 	//fmt.Printf("Respond: %v", resp)
@@ -64,13 +64,13 @@ func (c *Client) ListLatestSamples() (*ListLatest, error) {
 	}
 	jsonData, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("io.ReadAll: %w", err)
+		return nil, fmt.Errorf("io.ReadAll: %w: %v", ErrResponseError, err)
 	}
 	//fmt.Printf("%v\n", string(jsonData))
 	var data ListLatest
 	err = json.Unmarshal(jsonData, &data)
 	if err != nil {
-		return nil, fmt.Errorf("json.Unmarshal: %w\n%s", err, string(jsonData))
+		return nil, fmt.Errorf("json.Unmarshal: %w: %v\n%s", ErrResponseError, err, string(jsonData))
 	}
 	log.Printf("Count: %d\n", data.Count)
 	log.Printf("Status: %s\n", data.Status)
